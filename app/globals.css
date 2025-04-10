@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 186 43% 8%;
+    --foreground: 72 100% 65%;
+    
+    --card: 186 43% 8%;
+    --card-foreground: 72 100% 65%;
+    
+    --popover: 186 43% 8%;
+    --popover-foreground: 72 100% 65%;
+    
+    --primary: 72 100% 65%;
+    --primary-foreground: 186 43% 8%;
+    
+    --secondary: 182 37% 18%;
+    --secondary-foreground: 72 100% 65%;
+    
+    --muted: 182 37% 18%;
+    --muted-foreground: 72 48% 55%;
+    
+    --accent: 82 52% 33%;
+    --accent-foreground: 72 100% 65%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 72 100% 65%;
+    
+    --border: 182 37% 18%;
+    --input: 182 37% 18%;
+    --ring: 72 100% 65%;
+    
+    --chart-1: 72 100% 65%;
+    --chart-2: 82 52% 33%;
+    --chart-3: 182 37% 18%;
+    --chart-4: 186 43% 8%;
+    --chart-5: 71 100% 62%;
+    
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 186 43% 8%;
+    --foreground: 72 100% 65%;
+    
+    --card: 186 43% 8%;
+    --card-foreground: 72 100% 65%;
+    
+    --popover: 186 43% 8%;
+    --popover-foreground: 72 100% 65%;
+    
+    --primary: 72 100% 65%;
+    --primary-foreground: 186 43% 8%;
+    
+    --secondary: 182 37% 18%;
+    --secondary-foreground: 72 100% 65%;
+    
+    --muted: 182 37% 18%;
+    --muted-foreground: 72 48% 55%;
+    
+    --accent: 82 52% 33%;
+    --accent-foreground: 72 100% 65%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 72 100% 65%;
+    
+    --border: 182 37% 18%;
+    --input: 182 37% 18%;
+    --ring: 72 100% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@keyframes slide {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-slide {
+  display: inline-block;
+  animation: slide 12s linear infinite;
+}
