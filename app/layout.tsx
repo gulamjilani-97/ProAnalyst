@@ -20,6 +20,7 @@ const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [newsItems, setNewsItems] = useState<string[]>([]);
   const [currentNews, setCurrentNews] = useState(0);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   // Fetch news articles when the component mounts
   useEffect(() => {
@@ -44,6 +45,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return () => clearInterval(interval);
   }, [newsItems]);
 
+  // Toggle mobile navigation menu
+  const toggleMobileNav = () => {
+    setMobileNavOpen((prev) => !prev);
+  };
+
+  // Navigation items
+  const navItems = [
+    ["Home", "/"],
+    ["Matches", "/match"],
+    ["Team", "/team"],
+    ["Starting XI", "/lineup"],
+    ["League Standing", "/league-standing"],
+  ];
+
   return (
     <html lang="en">
       <body className={`${inter.className} bg-background text-foreground`}>
@@ -58,15 +73,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <img src="/favicon.ico" alt="Pro Analyst Logo" className="w-8 h-8" />
                 Pro Analyst
               </Link>
-              <nav>
+
+              {/* Desktop Navigation */}
+              <nav className="hidden md:block">
                 <ul className="flex gap-6 text-sm font-medium">
-                  {[
-                    ["Home", "/"],
-                    ["Matches", "/match"],
-                    ["Team", "/team"],
-                    ["Starting XI", "/lineup"],
-                    ["League Standing", "/league-standing"],
-                  ].map(([name, href]) => (
+                  {navItems.map(([name, href]) => (
                     <li key={href}>
                       <Link href={href} className="hover:text-primary transition-colors">
                         {name}
@@ -75,12 +86,64 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   ))}
                 </ul>
               </nav>
+
+              {/* Mobile Hamburger Button */}
+              <button
+                className="md:hidden p-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                onClick={toggleMobileNav}
+                aria-label="Toggle Mobile Navigation"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  {mobileNavOpen ? (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  ) : (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  )}
+                </svg>
+              </button>
             </div>
+
+            {/* Mobile Navigation Menu */}
+            {mobileNavOpen && (
+              <nav className="md:hidden">
+                <ul className="flex flex-col gap-4 py-4">
+                  {navItems.map(([name, href]) => (
+                    <li key={href}>
+                      <Link
+                        href={href}
+                        className="block hover:text-primary transition-colors"
+                        onClick={() => setMobileNavOpen(false)}
+                      >
+                        {name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            )}
           </div>
         </header>
 
         {/* Main Content with extra bottom padding */}
-        <main className="pb-16 min-h-screen">{children}</main>
+        <main className="pb-16 min-h-screen">
+          {children}
+        </main>
 
         {/* Footer */}
         <footer className="pb-16 bg-background text-foreground py-12 border-t border-muted">
@@ -92,6 +155,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   "Your Game, Your Data, Your Victory."
                 </p>
               </div>
+              {/* Additional footer columns can be added here */}
             </div>
             <div className="mt-8 text-center text-muted-foreground text-xs">
               &copy; 2024 Pro Analyst. All rights reserved.
@@ -100,7 +164,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </footer>
 
         {/* Breaking News Ticker */}
-        <div className="bg-[#00272b] text-[#e0ff4f] py-4 fixed bottom-0 w-full z-50">
+        <div className="bg-[#00272b] text-[#e0ff4f] py-4 fixed bottom-0 w-full z-[50]">
           <div className="container mx-auto px-4">
             <div className="flex items-center overflow-hidden">
               <div className="font-bold bg-[#00272b] text-[#e0ff4f] mr-6 whitespace-nowrap">
