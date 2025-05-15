@@ -7,7 +7,7 @@ import {
   MapPin,
   Loader2,
   AlertCircle,
-  Users,
+  Flag,
 } from "lucide-react";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -105,7 +105,7 @@ export function UpcomingMatches() {
   if (matches.length === 0) {
     return (
       <div className="p-12 flex flex-col items-center justify-center min-h-[400px] bg-secondary/5 rounded-lg">
-        <Users className="w-12 h-12 text-muted-foreground mb-4" />
+        <Flag className="w-12 h-12 text-muted-foreground mb-4" />
         <h3 className="text-xl font-semibold text-card-foreground mb-2">
           No Upcoming Matches
         </h3>
@@ -168,18 +168,7 @@ export function UpcomingMatches() {
                 {/* Date / Time / Venue */}
                 <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-4 mb-8 text-sm sm:text-base text-muted-foreground">
                   <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-5 h-5 text-primary" />
-                      <span className="font-medium">
-                        {format(new Date(currentMatch.utcDate), "MMMM d, yyyy")}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-5 h-5 text-primary" />
-                      <span className="font-medium">
-                        {format(new Date(currentMatch.utcDate), "h:mm a")}
-                      </span>
-                    </div>
+                    
                   </div>
 
                   <div className="flex items-center gap-2">

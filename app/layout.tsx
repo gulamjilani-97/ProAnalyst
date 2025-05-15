@@ -41,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     if (newsItems.length === 0) return;
     const interval = setInterval(() => {
       setCurrentNews((prev) => (prev + 1) % newsItems.length);
-    }, 4000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [newsItems]);
 
@@ -56,7 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     ["Matches", "/match"],
     ["Team", "/team"],
     ["Starting XI", "/lineup"],
-    ["League Standing", "/league-standing"],
+    // ["League Standing", "/league-standing"],
   ];
 
   return (

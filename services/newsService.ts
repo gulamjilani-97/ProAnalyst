@@ -22,7 +22,7 @@ export const newsService = {
       sortBy: "publishedAt",
       language: "en",
       pageSize: 20,
-      apiKey: "4a0db780c0f24af3a24635b94386cc4..2",
+      apiKey: "4a0db780c0f24af3a24635b94386cc42",
     };
 
     try {

@@ -1,257 +1,230 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Calendar, Clock, MapPin } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import {
+  Calendar,
+  Clock,
+  Loader2,
+  AlertCircle,
+  Flag,
+} from "lucide-react";
 import Image from "next/image";
-import { matches, latestResults, upcomingMatch, newsItems } from "@/lib/mock-data";
-import { formatDate, formatTime, getMatchStatus } from "@/lib/utils";
+import { formatDate, formatTime } from "@/lib/utils";
+import MatchCarousel from "@/components/home/matchCarousel";
+import LatestResults from "@/components/home/latestResults";
+import { matchService } from "@/services/matchService";
+import { Match } from "@/components/types/match";
 
-export default function Home() {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [currentNews, setCurrentNews] = useState(0);
+export default function HomePage() {
+  const [upcomingMatches, setUpcomingMatches] = useState<Match[]>([]);
+  const [recentMatches, setRecentMatches] = useState<Match[]>([]);
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentNews((prev) => (prev + 1) % newsItems.length);
-    }, 5000);
-    return () => clearInterval(timer);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filteredMatches, setFilteredMatches] = useState<Match[]>([]);
+
+  const loadRecentMatches = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const recent = await matchService.getRecentMatches();
+      setRecentMatches(recent);
+      setFilteredMatches(recent);
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+      setRecentMatches([]);
+      setFilteredMatches([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        const upcoming = await matchService.getUpcomingMatches();
+        setUpcomingMatches(upcoming);
+        if (upcoming.length > 0) {
+          setSelectedMatch(upcoming[0]);
+        }
+      } catch (err) {
+        console.error("Error fetching upcoming matches:", err);
+      }
+
+      await loadRecentMatches();
+    };
+
+    fetchAll();
+  }, [loadRecentMatches]);
+
+  // ────────────────────────────────────────────────────────────
+  // PAGE-SCOPED OVERLAYS
+  // ────────────────────────────────────────────────────────────
+
+  // 1) Loading
+  if (loading) {
+    return (
+      <div className="relative min-h-screen">
+        <div className="absolute inset-0 z-10 bg-background/90 flex flex-col items-center justify-center">
+          <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+          <h3 className="text-xl font-semibold text-card-foreground mb-2">
+            Loading recent matches...
+          </h3>
+          <p className="text-muted-foreground text-center max-w-md">
+            Fetching latest match results
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // 2) Error
+  if (error && recentMatches.length === 0) {
+    return (
+      <div className="relative min-h-screen">
+        <div className="absolute inset-0 z-10 bg-destructive/10 flex flex-col items-center justify-center">
+          <AlertCircle className="w-12 h-12 text-destructive mb-4" />
+          <h3 className="text-xl font-semibold text-destructive mb-2">
+            Failed to Load Results
+          </h3>
+          <p className="text-muted-foreground text-center max-w-md mb-4">
+            {error}
+          </p>
+          <button
+            onClick={loadRecentMatches}
+            className="px-4 py-2 bg-card hover:bg-secondary/80 text-card-foreground rounded-md transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 3) Empty
+  if (!loading && filteredMatches.length === 0) {
+    return (
+      <div className="relative min-h-screen">
+        <div className="absolute inset-0 z-10 bg-background/90 flex flex-col items-center justify-center">
+          <Flag className="w-12 h-12 text-muted-foreground mb-4" />
+          <h3 className="text-xl font-semibold text-card-foreground mb-2">
+            No Matches Found
+          </h3>
+          <p className="text-muted-foreground text-center max-w-md">
+            Try adjusting your filters or search term.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ────────────────────────────────────────────────────────────
+  // MAIN CONTENT (wrapped in a relative container)
+  // ────────────────────────────────────────────────────────────
+
   return (
-    <main className="min-h-screen bg-background">
-      {/* Hero Slider */}
-      <div className="relative h-[600px] bg-[#00272b]">
-        <div className="absolute inset-0">
-          <Image
-            src="https://images.unsplash.com/photo-1540552965541-cc47d835c36d?w=1920&h=600&fit=crop"
-            alt="Stadium"
-            fill
-            className="object-cover opacity-20"
-            priority
-          />
-        </div>
-        <div className="relative h-full flex items-center justify-center text-[#e0ff4f]">
-          <button
-            onClick={() => setCurrentSlide((prev) => (prev === 0 ? matches.length - 1 : prev - 1))}
-            className="absolute left-4 p-3 bg-[#1c403f] rounded-full hover:bg-[#5a7432] transition-colors"
-            aria-label="Previous slide"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
+    <div className="relative">
+      <main className="min-h-screen bg-background">
+        {/* Hero Carousel */}
+        <MatchCarousel matches={upcomingMatches} />
 
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-4 text-lg mb-6 text-[#b6d841]">
-              <Calendar className="w-5 h-5" />
-              <span>{formatDate(matches[currentSlide].date)}</span>
-              <Clock className="w-5 h-5 ml-4" />
-              <span>{formatTime(matches[currentSlide].date)}</span>
-              <MapPin className="w-5 h-5 ml-4" />
-              <span>{matches[currentSlide].venue}</span>
-            </div>
-            <div className="flex items-center justify-center gap-12">
-              <div className="text-center">
-                <div className="w-20 h-20 bg-[#1c403f] rounded-full mb-4 mx-auto overflow-hidden">
-                  <Image
-                    src={matches[currentSlide].homeTeam.logo}
-                    alt={matches[currentSlide].homeTeam.name}
-                    width={80}
-                    height={80}
-                    className="object-cover"
-                  />
-                </div>
-                <span className="text-2xl font-bold">{matches[currentSlide].homeTeam.name}</span>
-              </div>
-              
-              <div className="text-center px-8 py-4 rounded-xl bg-[#1c403f]/80 backdrop-blur-sm">
-                {matches[currentSlide].status === "FINISHED" ? (
-                  <div className="text-6xl font-bold text-[#e0ff4f]">
-                    {matches[currentSlide].score?.home} - {matches[currentSlide].score?.away}
-                  </div>
-                ) : (
-                  <div className="text-4xl font-bold">VS</div>
-                )}
-                <div className="text-sm mt-2 text-[#b6d841]">{matches[currentSlide].competition}</div>
-              </div>
-
-              <div className="text-center">
-                <div className="w-20 h-20 bg-[#1c403f] rounded-full mb-4 mx-auto overflow-hidden">
-                  <Image
-                    src={matches[currentSlide].awayTeam.logo}
-                    alt={matches[currentSlide].awayTeam.name}
-                    width={80}
-                    height={80}
-                    className="object-cover"
-                  />
-                </div>
-                <span className="text-2xl font-bold">{matches[currentSlide].awayTeam.name}</span>
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={() => setCurrentSlide((prev) => (prev === matches.length - 1 ? 0 : prev + 1))}
-            className="absolute right-4 p-3 bg-[#1c403f] rounded-full hover:bg-[#5a7432] transition-colors"
-            aria-label="Next slide"
-          >
-            <ChevronRight className="w-6 h-6" />
-          </button>
-        </div>
-      </div>
-
-      {/* Next Match & Latest Matches */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="grid md:grid-cols-2 gap-12">
-          {/* Next Match */}
-          <div>
-            <h2 className="text-2xl font-bold mb-6 flex items-center text-[#e0ff4f]">
-              <Calendar className="w-6 h-6 mr-2 text-[#b6d841]" />
-              Next Match
-            </h2>
-            <div className="relative h-[400px] rounded-2xl overflow-hidden shadow-xl">
-              <Image
-                src="https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=800&h=400&fit=crop"
-                alt="Next match"
-                fill
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#00272b] via-[#00272b]/70 to-transparent p-8 flex flex-col justify-end text-[#e0ff4f]">
-                <div className="flex items-center gap-2 text-[#b6d841] mb-2">
-                  <MapPin className="w-4 h-4" />
-                  <span>{upcomingMatch.venue}</span>
-                </div>
-                <div className="flex items-center gap-2 text-xl mb-6">
-                  <Calendar className="w-5 h-5" />
-                  <span>{formatDate(upcomingMatch.date)}</span>
-                  <Clock className="w-5 h-5 ml-4" />
-                  <span>{formatTime(upcomingMatch.date)}</span>
-                </div>
-                <div className="flex items-center justify-between mb-8">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 bg-[#1c403f] rounded-full overflow-hidden">
-                      <Image
-                        src={upcomingMatch.homeTeam.logo}
-                        alt={upcomingMatch.homeTeam.name}
-                        width={64}
-                        height={64}
-                        className="object-cover"
-                      />
+        {/* Next Match & Latest Matches */}
+        <section className="container mx-auto px-4 py-16">
+          <div className="grid md:grid-cols-1 gap-12">
+            {/* Next Match */}
+            {selectedMatch && (
+              <div>
+                <h2 className="text-2xl font-bold mb-6 flex items-center text-[#e0ff4f]">
+                  <Calendar className="w-6 h-6 mr-2 text-[#b6d841]}" />
+                  Next Match
+                </h2>
+                <div className="relative h-[400px] rounded-2xl overflow-hidden shadow-xl">
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#00272b] via-[#00272b]/70 to-transparent p-8 flex flex-col justify-end text-[#e0ff4f]">
+                    <div className="flex items-center gap-2 text-xl mb-6">
+                      <Calendar className="w-5 h-5" />
+                      <span>{formatDate(selectedMatch.utcDate)}</span>
+                      <Clock className="w-5 h-5 ml-4" />
+                      <span>{formatTime(selectedMatch.utcDate)}</span>
                     </div>
-                    <span className="text-xl font-bold">{upcomingMatch.homeTeam.name}</span>
-                  </div>
-                  <div className="text-3xl font-bold px-6 py-2 rounded-full bg-[#1c403f]/80 backdrop-blur-sm">
-                    VS
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-xl font-bold">{upcomingMatch.awayTeam.name}</span>
-                    <div className="w-16 h-16 bg-[#1c403f] rounded-full overflow-hidden">
-                      <Image
-                        src={upcomingMatch.awayTeam.logo}
-                        alt={upcomingMatch.awayTeam.name}
-                        width={64}
-                        height={64}
-                        className="object-cover"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <button className="bg-[#5a7432] text-[#e0ff4f] font-bold py-3 px-6 rounded-full hover:bg-[#b6d841] hover:text-[#00272b] transition-colors w-full text-center">
-                  MATCH DETAILS
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Latest Matches */}
-          <div>
-            <h2 className="text-2xl font-bold mb-6 flex items-center text-[#e0ff4f]">
-              <Clock className="w-6 h-6 mr-2 text-[#b6d841]" />
-              Latest Results
-            </h2>
-            <div className="space-y-4">
-              {latestResults.map((match) => (
-                <div
-                  key={match.id}
-                  className="bg-[#1c403f] rounded-xl p-6 shadow-md hover:shadow-xl transition-shadow"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm font-medium text-[#e0ff4f] bg-[#5a7432] px-3 py-1 rounded-full">
-                      {match.competition}
-                    </span>
-                    <span className="text-sm text-[#b6d841]">{formatDate(match.date)}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full overflow-hidden bg-[#00272b]">
-                        <Image
-                          src={match.homeTeam.logo}
-                          alt={match.homeTeam.name}
-                          width={48}
-                          height={48}
-                          className="object-cover"
-                        />
+                    <div className="flex items-center justify-between mb-8">
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 bg-[#1c403f] rounded-full overflow-hidden">
+                          <Image
+                            src={selectedMatch.homeTeam.crest}
+                            alt={selectedMatch.homeTeam.name}
+                            width={64}
+                            height={64}
+                            className="object-contain"
+                          />
+                        </div>
+                        <span className="text-xl font-bold">
+                          {selectedMatch.homeTeam.shortName}
+                        </span>
                       </div>
-                      <span className="font-semibold text-[#e0ff4f]">{match.homeTeam.name}</span>
-                    </div>
-                    <div className="px-6 py-2 rounded-lg bg-[#00272b] text-[#e0ff4f] font-bold">
-                      {match.score.home} - {match.score.away}
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="font-semibold text-[#e0ff4f]">{match.awayTeam.name}</span>
-                      <div className="w-12 h-12 rounded-full overflow-hidden bg-[#00272b]">
-                        <Image
-                          src={match.awayTeam.logo}
-                          alt={match.awayTeam.name}
-                          width={48}
-                          height={48}
-                          className="object-cover"
-                        />
+                      <div className="text-3xl font-bold px-6 py-2 rounded-full bg-[#1c403f]/80 backdrop-blur-sm">
+                        VS
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-xl font-bold">
+                          {selectedMatch.awayTeam.shortName}
+                        </span>
+                        <div className="w-16 h-16 bg-[#1c403f] rounded-full overflow-hidden">
+                          <Image
+                            src={selectedMatch.awayTeam.crest}
+                            alt={selectedMatch.awayTeam.name}
+                            width={64}
+                            height={64}
+                            className="object-contain"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+              </div>
+            )}
 
-      {/* About Section */}
-      <section className="bg-[#00272b] text-[#e0ff4f] py-20">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold mb-12 text-center">About Us</h2>
-          <div className="max-w-4xl mx-auto">
-            <p className="text-xl text-[#b6d841] mb-12 text-center leading-relaxed">
-              Welcome to Pro Analyst, where we combine the passion for football with the power of
-              artificial intelligence. Our mission is to revolutionize the way football is analyzed,
-              understood, and experienced by everyone—from coaches and analysts to players and fans.
-            </p>
-            <div className="grid md:grid-cols-2 gap-12">
-              <div className="bg-[#1c403f] p-8 rounded-2xl text-center">
-                <div className="text-[#e0ff4f] text-3xl font-bold mb-4">" "</div>
-                <p className="text-xl text-[#b6d841]">Where AI Meets the Beautiful Game.</p>
-              </div>
-              <div className="bg-[#1c403f] p-8 rounded-2xl text-center">
-                <div className="text-[#e0ff4f] text-3xl font-bold mb-4">" "</div>
-                <p className="text-xl text-[#b6d841]">Analyze. Optimize. Dominate the Field.</p>
-              </div>
+            {/* Latest Matches */}
+            <div>
+              <h2 className="text-2xl font-bold mb-6 flex items-center text-[#e0ff4f]">
+                <Clock className="w-6 h-6 mr-2 text-[#b6d841]}" />
+                Latest Results
+              </h2>
+              <LatestResults matches={filteredMatches} />
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Breaking News */}
-      <div className="bg-[#00272b] text-[#e0ff4f] py-4 fixed bottom-0 w-full z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center">
-            <div className="font-bold text-[#e0ff4f] mr-8 whitespace-nowrap">BREAKING NEWS</div>
-            <div className="text-[#b6d841] overflow-hidden">
-              <div className="animate-slide whitespace-nowrap">
-                {newsItems[currentNews]}
+        {/* About Section */}
+        <section className="bg-[#00272b] text-[#e0ff4f] py-20">
+          <div className="container mx-auto px-4">
+            <h2 className="text-4xl font-bold mb-12 text-center">About Us</h2>
+            <div className="max-w-4xl mx-auto">
+              <p className="text-xl text-[#b6d841] mb-12 text-center leading-relaxed">
+                Welcome to Pro Analyst, where we combine the passion for football with the power of
+                artificial intelligence. Our mission is to revolutionize the way football is analyzed,
+                understood, and experienced by everyone—from coaches and analysts to players and fans.
+              </p>
+              <div className="grid md:grid-cols-2 gap-12">
+                <div className="bg-[#1c403f] p-8 rounded-2xl text-center transform transition-all duration-300 hover:scale-105">
+                  <div className="text-[#e0ff4f] text-3xl font-bold mb-4">" "</div>
+                  <p className="text-xl text-[#b6d841]">
+                    Where AI Meets the Beautiful Game.
+                  </p>
+                </div>
+                <div className="bg-[#1c403f] p-8 rounded-2xl text-center transform transition-all duration-300 hover:scale-105">
+                  <div className="text-[#e0ff4f] text-3xl font-bold mb-4">" "</div>
+                  <p className="text-xl text-[#b6d841]">
+                    Analyze. Optimize. Dominate the Field.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </main>
+        </section>
+      </main>
+    </div>
   );
 }

@@ -12,9 +12,10 @@ export default function MatchHeader({ homeTeam, awayTeam }: Props) {
   return (
     <div className="bg-card text-card-foreground py-16">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-8">
-            <div className="relative w-24 h-24">
+        <div className="flex flex-col md:flex-row justify-between items-center">
+          {/* Home Team Block */}
+          <div className="flex flex-col md:flex-row items-center md:space-x-8 mb-8 md:mb-0">
+            <div className="relative w-24 h-24 mb-4 md:mb-0">
               <Image
                 src={homeTeam.logo}
                 alt={homeTeam.name}
@@ -22,10 +23,10 @@ export default function MatchHeader({ homeTeam, awayTeam }: Props) {
                 className="object-contain"
               />
             </div>
-            <div>
+            <div className="text-center md:text-left">
               <h2 className="text-2xl font-bold text-primary">{homeTeam.name}</h2>
               <p className="text-muted-foreground">{homeTeam.location}</p>
-              <div className="flex gap-2 mt-2">
+              <div className="flex gap-2 mt-2 justify-center md:justify-start">
                 {homeTeam.latestResults.map((result, index) => (
                   <span
                     key={index}
@@ -38,14 +39,16 @@ export default function MatchHeader({ homeTeam, awayTeam }: Props) {
               </div>
             </div>
           </div>
-          
-          <div className="text-4xl font-bold text-primary">VS</div>
-          
-          <div className="flex items-center space-x-8">
-            <div>
-              <h2 className="text-2xl font-bold text-primary text-right">{awayTeam.name}</h2>
-              <p className="text-muted-foreground text-right">{awayTeam.location}</p>
-              <div className="flex gap-2 mt-2 justify-end">
+
+          {/* VS Text */}
+          <div className="text-4xl font-bold text-primary mb-8 md:mb-0">VS</div>
+
+          {/* Away Team Block */}
+          <div className="flex flex-col md:flex-row items-center md:space-x-8">
+            <div className="text-center md:text-right">
+              <h2 className="text-2xl font-bold text-primary">{awayTeam.name}</h2>
+              <p className="text-muted-foreground">{awayTeam.location}</p>
+              <div className="flex gap-2 mt-2 justify-center md:justify-end">
                 {awayTeam.latestResults.map((result, index) => (
                   <span
                     key={index}
@@ -57,7 +60,7 @@ export default function MatchHeader({ homeTeam, awayTeam }: Props) {
                 ))}
               </div>
             </div>
-            <div className="relative w-24 h-24">
+            <div className="relative w-24 h-24 mt-4 md:mt-0">
               <Image
                 src={awayTeam.logo}
                 alt={awayTeam.name}

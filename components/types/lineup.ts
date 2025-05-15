@@ -4,12 +4,15 @@ export interface Team {
   logo: string;
   latestResults: Array<'w' | 'd' | 'l'>;
   players: Player[];
+  formation?: string;
 }
 
 export interface MatchDetails {
+  id: string;
   homeTeam: Team;
   awayTeam: Team;
   matchTime: string;
+  competition: string;
   venue: {
     name: string;
     image: string;
@@ -31,7 +34,6 @@ export interface MatchDetails {
 export interface Player {
   name: string;
   position: string;
-  number: number;
   image?: string;
   nationality?: string;
 }
@@ -56,4 +58,11 @@ export interface PlayerResponse {
     strThumb: string;
     strNationality: string;
   }>;
+}
+
+export interface Formation {
+  name: string;
+  positions: {
+    [key: string]: { x: number; y: number };
+  };
 }
